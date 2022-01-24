@@ -16,6 +16,7 @@ class handDetector: # main class
         # create hands connections
         self.hands = self.mpHands.Hands(self.mode,  self.maxHands, self.model_complexity,  self.detectionCon, self.trackCon)
         self.mpDraw = mp.solutions.drawing_utils # draw hand connections
+        self.tipIds = [4, 8, 12, 16, 20] # set the finger tip points
 
     def findHands(self, img, draw=True): # detect the hands
         imgRGB = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # convert the colors
@@ -29,7 +30,7 @@ class handDetector: # main class
         return img # return the image
 
     def findPosition(self, img, handNo=0, draw=True): # detect specific position
-        lmList = []
+        self.lmList = []
         if self.results.multi_hand_landmarks:
             myHand = self.results.multi_hand_landmarks[handNo] # define specific hand
             for id, lm in enumerate(myHand.landmark):
@@ -37,14 +38,27 @@ class handDetector: # main class
                 h, w, c = img.shape # get the positions
                 cx, cy = int(lm.x * w), int(lm.y * h) # convert into integer
                 # print(id, cx, cy)
-                lmList.append([id, cx, cy]) # list the positions
+                self.lmList.append([id, cx, cy]) # list the positions
                 if draw:
                     cv2.circle(img, (cx, cy), 5, (255, 0, 0), cv2.FILLED) # draw a circle in specific position
                 # if id == 0:
                 #     cv2.circle(img, (cx, cy), 25, (255, 0, 255), cv2.FILLED)
 
-        return lmList
+        return self.lmList
 
+    def fingersUp(self):
+        fingers = []
+
+        # thumb
+        # if lmList[tipIds[0][1]] < lmList[tipIds[0] - 1][1]: # track the thumb finger showing or not
+        #     fingers.append(1)
+
+        for id in range(1, 5):
+            if self.lmList[self.tipIds[id]][2] < self.lmList[self.tipIds[id] - 2][2]:  # track the other fingers showing or not
+                fingers.append(1)
+            else:
+                fingers.append(0)
+        return fingers
 
 def main():
     pTime = 0
